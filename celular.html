@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TradingView Dual Charts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #charts {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .chart {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    #watchlist {
+      position: fixed;
+      top: 50px;
+      left: 0;
+      width: 220px;
+      height: calc(100% - 50px);
+      background: #222;
+      overflow-y: auto;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+      padding: 10px;
+      box-sizing: border-box;
+      z-index: 999;
+    }
+
+    #watchlist.show {
+      transform: translateX(0);
+    }
+
+    #toggleWatchlist {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #444;
+      border: none;
+      padding: 8px 12px;
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+      z-index: 1000;
+    }
+
+    #search {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .symbol {
+      padding: 5px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .symbol:hover, .active {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <button id="toggleWatchlist">☰</button>
+
+  <div id="watchlist">
+    <input type="text" id="search" placeholder="Search symbol...">
+    <div id="symbols"></div>
+  </div>
+
+  <div id="charts">
+    <iframe id="chart1" class="chart"></iframe>
+    <iframe id="chart2" class="chart"></iframe>
+  </div>
+
+  <script>
+    const symbolsList = [
+      "BINGX:BTCUSDT.P",
+      "BINGX:ETHUSDT.P",
+      "BINGX:XRPUSDT.P",
+      "BINGX:SOLUSDT.P",
+      "BINGX:BNBUSDT.P"
+    ];
+
+    const symbolsDiv = document.getElementById("symbols");
+    const searchInput = document.getElementById("search");
+    const toggleBtn = document.getElementById("toggleWatchlist");
+    const watchlist = document.getElementById("watchlist");
+
+    let currentIndex = 0;
+
+    function renderSymbols() {
+      symbolsDiv.innerHTML = "";
+      symbolsList.forEach((s, i) => {
+        const div = document.createElement("div");
+        div.className = "symbol" + (i === currentIndex ? " active" : "");
+        div.innerText = s;
+        div.onclick = () => {
+          currentIndex = i;
+          loadCharts();
+          renderSymbols();
+        };
+        symbolsDiv.appendChild(div);
+      });
+    }
+
+    function loadCharts() {
+      const symbol = symbolsList[currentIndex];
+      document.getElementById("chart1").src = `https://s.tradingview.com/widgetembed/?frameElementId=chart1&symbol=${symbol}&interval=5&theme=dark&style=1&hide_volume=true&hide_legend=true&hide_side_toolbar=true`;
+      document.getElementById("chart2").src = `https://s.tradingview.com/widgetembed/?frameElementId=chart2&symbol=${symbol}&interval=120&theme=dark&style=1&hide_volume=true&hide_legend=true&hide_side_toolbar=true`;
+    }
+
+    // Toggle watchlist
+    toggleBtn.onclick = () => {
+      watchlist.classList.toggle("show");
+    };
+
+    // Search function
+    searchInput.oninput = () => {
+      const filter = searchInput.value.toUpperCase();
+      [...symbolsDiv.children].forEach(div => {
+        div.style.display = div.innerText.toUpperCase().includes(filter) ? "" : "none";
+      });
+    };
+
+    // Swipe navigation
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") {
+        currentIndex = (currentIndex + 1) % symbolsList.length;
+        loadCharts();
+        renderSymbols();
+      }
+      if (e.key === "ArrowLeft") {
+        currentIndex = (currentIndex - 1 + symbolsList.length) % symbolsList.length;
+        loadCharts();
+        renderSymbols();
+      }
+    });
+
+    renderSymbols();
+    loadCharts();
+  </script>
+</body>
+</html>
